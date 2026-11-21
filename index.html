@@ -1,52 +1,255 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8">
-    <title>Кейс Баттл</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #1a1a1d;
-        color: #ffffff;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-      }
-      .container {
-        text-align: center;
-        background: #2c2c30;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        border: 1px solid #444;
-      }
-      h1 {
-        color: #ff4757;
-        margin-bottom: 10px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-      }
-      p {
-        color: #bdc3c7;
-        font-size: 1.1em;
-      }
-      .status {
-        margin-top: 20px;
-        font-size: 0.9em;
-        color: #2ed573;
-        font-weight: bold;
-      }
-    </style>
-  </head>
+<head>
+<meta charset="UTF-8">
+<title>Кейс Баттл</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: #1a1a1d;
+    color: #fff;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 30px 15px;
+  }
+  .wrap { max-width: 700px; width: 100%; }
+  h1 {
+    text-align: center;
+    color: #ff4757;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+  }
+  .balance {
+    text-align: center;
+    color: #2ed573;
+    font-weight: bold;
+    margin-bottom: 25px;
+    font-size: 1.1em;
+  }
+  .cases { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+  .case {
+    background: #2c2c30;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    width: 180px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .case:hover { transform: translateY(-4px); border-color: #ff4757; }
+  .case .emoji { font-size: 42px; }
+  .case .name { margin: 10px 0 5px; font-weight: bold; }
+  .case .price { color: #feca57; }
+  .case.selected { border-color: #2ed573; }
+  .roller {
+    position: relative;
+    background: #2c2c30;
+    border: 1px solid #444;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 120px;
+    margin-bottom: 25px;
+  }
+  .roller::before, .roller::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: #ff4757;
+    z-index: 2;
+  }
+  .roller::before { left: calc(50% - 1px); }
+  .roller::after { right: calc(50% - 1px); }
+  .strip {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    will-change: transform;
+  }
+  .item {
+    flex: 0 0 110px;
+    margin: 0 3px;
+    background: #1f1f23;
+    border: 1px solid #444;
+    border-radius: 8px;
+    text-align: center;
+    padding: 8px 2px;
+    font-size: 12px;
+  }
+  .item .ic { font-size: 34px; }
+  .rarity-common   { border-color: #7f8c8d; }
+  .rarity-rare     { border-color: #3498db; }
+  .rarity-epic     { border-color: #9b59b6; }
+  .rarity-legend   { border-color: #f39c12; }
+  .result {
+    text-align: center;
+    min-height: 60px;
+    font-size: 1.15em;
+  }
+  .result .win { color: #2ed573; font-weight: bold; }
+  button.spin {
+    display: block;
+    margin: 0 auto 20px;
+    background: #ff4757;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 40px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button.spin:disabled { opacity: .5; cursor: not-allowed; }
+</style>
+</head>
 <body>
-    <div class="container">
-      <h1>Капля Человечности</h1>
-      <p>Твой сайт на GitHub Pages.</p>
-      <p>Домен: Hinttai.github.io</p>
-      <div class="status">Статус: Активен</div>
+<div class="wrap">
+  <h1>Кейс Баттл</h1>
+  <div class="balance">Баланс: <span id="balance">1000</span> монет</div>
+
+  <div class="cases">
+    <div class="case selected" data-price="100" data-loot="loot1">
+      <div class="emoji">📦</div>
+      <div class="name">Обычный кейс</div>
+      <div class="price">100 монет</div>
     </div>
-  </body>
+    <div class="case" data-price="300" data-loot="loot2">
+      <div class="emoji">🎁</div>
+      <div class="name">Редкий кейс</div>
+      <div class="price">300 монет</div>
+    </div>
+    <div class="case" data-price="800" data-loot="loot3">
+      <div class="emoji">💎</div>
+      <div class="name">Легендарный кейс</div>
+      <div class="price">800 монет</div>
+    </div>
+  </div>
+
+  <div class="roller">
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <button class="spin" id="spinBtn">Крутить</button>
+  <div class="result" id="result">Выбери кейс и жми «Крутить»</div>
+</div>
+
+<script>
+  // Наборы предметов для каждого кейса: [эмодзи, название, шанс в %, цена (сколько вернёт)]
+  const LOOT = {
+    loot1: [
+      { e: '🪙', n: '5 монет',      w: 40, v: 5,    r: 'rarity-common' },
+      { e: '🔧', n: 'Гаечный ключ', w: 30, v: 60,   r: 'rarity-common' },
+      { e: '🗡️', n: 'Кинжал',       w: 20, v: 150,  r: 'rarity-rare' },
+      { e: '🔫', n: 'Пистолет',     w: 9,  v: 300,  r: 'rarity-epic' },
+      { e: '💎', n: 'Алмаз',        w: 1,  v: 1500, r: 'rarity-legend' }
+    ],
+    loot2: [
+      { e: '🪙', n: '20 монет',     w: 35, v: 20,   r: 'rarity-common' },
+      { e: '🛡️', n: 'Щит',          w: 30, v: 200,  r: 'rarity-rare' },
+      { e: '⚔️', n: 'Меч',          w: 25, v: 400,  r: 'rarity-epic' },
+      { e: '👑', n: 'Корона',       w: 9,  v: 900,  r: 'rarity-legend' },
+      { e: '🔥', n: 'Пламя дракона',w: 1,  v: 4000, r: 'rarity-legend' }
+    ],
+    loot3: [
+      { e: '🪙', n: '50 монет',     w: 30, v: 50,   r: 'rarity-common' },
+      { e: '🏹', n: 'Лук',          w: 30, v: 500,  r: 'rarity-rare' },
+      { e: '🚀', n: 'Ракетница',    w: 25, v: 1100, r: 'rarity-epic' },
+      { e: '🦄', n: 'Единорог',     w: 13, v: 2500, r: 'rarity-legend' },
+      { e: '🌌', n: 'Артефакт богов',w: 2, v: 12000,r: 'rarity-legend' }
+    ]
+  };
+
+  let balance = 1000;
+  let selectedCase = document.querySelector('.case.selected');
+  let spinning = false;
+
+  const strip = document.getElementById('strip');
+  const resultEl = document.getElementById('result');
+  const balanceEl = document.getElementById('balance');
+  const spinBtn = document.getElementById('spinBtn');
+
+  document.querySelectorAll('.case').forEach(c => {
+    c.addEventListener('click', () => {
+      if (spinning) return;
+      document.querySelector('.case.selected').classList.remove('selected');
+      c.classList.add('selected');
+      selectedCase = c;
+    });
+  });
+
+  function pickRandom(loot) {
+    let total = loot.reduce((s, i) => s + i.w, 0);
+    let roll = Math.random() * total;
+    for (let item of loot) {
+      roll -= item.w;
+      if (roll <= 0) return item;
+    }
+    return loot[loot.length - 1];
+  }
+
+  function buildStrip(loot, winnerIdx) {
+    strip.innerHTML = '';
+    strip.style.transform = 'translateX(0)';
+    const COUNT = 60;
+    const WIN_POS = 50; // позиция победителя в ленте
+    for (let i = 0; i < COUNT; i++) {
+      let item;
+      if (i === WIN_POS) {
+        item = loot[winnerIdx];
+      } else {
+        item = loot[Math.floor(Math.random() * loot.length)];
+      }
+      const div = document.createElement('div');
+      div.className = 'item ' + item.r;
+      div.innerHTML = '<div class="ic">' + item.e + '</div><div>' + item.n + '</div>';
+      strip.appendChild(div);
+    }
+    return WIN_POS;
+  }
+
+  spinBtn.addEventListener('click', () => {
+    if (spinning) return;
+    const price = parseInt(selectedCase.dataset.price);
+    if (balance < price) {
+      resultEl.innerHTML = '❌ Не хватает монет! Сначала заработай.';
+      return;
+    }
+    spinning = true;
+    spinBtn.disabled = true;
+    balance -= price;
+    balanceEl.textContent = balance;
+
+    const loot = LOOT[selectedCase.dataset.loot];
+    const winner = pickRandom(loot);
+    const winIdx = loot.indexOf(winner);
+    const winPos = buildStrip(loot, winIdx);
+
+    // Ширина одного элемента: 110px + 6px (margins)
+    const ITEM_W = 116;
+    const ROLLER_W = document.querySelector('.roller').offsetWidth;
+    // сдвигаем так, чтобы победитель оказался под красной линией (центр)
+    const offset = winPos * ITEM_W + ITEM_W / 2 - ROLLER_W / 2 + Math.random() * 40 - 20;
+
+    resultEl.innerHTML = 'Крутим...';
+    strip.style.transition = 'transform 4s cubic-bezier(0.12, 0.8, 0.15, 1)';
+    requestAnimationFrame(() => {
+      strip.style.transform = 'translateX(-' + offset + 'px)';
+    });
+
+    setTimeout(() => {
+      balance += winner.v;
+      balanceEl.textContent = balance;
+      resultEl.innerHTML = '<span class="win">🏆 Выпало: ' + winner.e + ' ' + winner.n +
+        ' (+ ' + winner.v + ' монет)</span>';
+      spinning = false;
+      spinBtn.disabled = false;
+    }, 4200);
+  });
+</script>
+</body>
 </html>
